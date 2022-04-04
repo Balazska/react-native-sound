@@ -32,6 +32,7 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
   final static Object NULL = null;
   String category;
   Boolean mixWithOthers = true;
+  Boolean duckOthers = true;
   Double focusedPlayerKey;
   Boolean wasPlayingBeforeFocusChange = false;
 
@@ -236,7 +237,14 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
     }
 
     // Request audio focus in Android system
-    if (!this.mixWithOthers) {
+    if (!this.mixWithOthers && !this.duckOthers) {
+      AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+
+      audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+      //audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+
+      this.focusedPlayerKey = key;
+    } else if(this.duckOthers){
       AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
       //audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
@@ -447,9 +455,10 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
   }
 
   @ReactMethod
-  public void setCategory(final String category, final Boolean mixWithOthers) {
+  public void setCategory(final String category, final Boolean mixWithOthers, final Boolean duckOthers) {
     this.category = category;
     this.mixWithOthers = mixWithOthers;
+    this.duckOthers = duckOthers;
   }
 
   @Override
